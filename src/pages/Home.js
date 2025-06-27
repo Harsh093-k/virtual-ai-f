@@ -168,89 +168,153 @@ function Home() {
   }
 };
 
-  useEffect(() => {
+  // useEffect(() => {
  
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.error('Speech recognition not supported');
-      return;
-    }
+  //   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+  //     console.error('Speech recognition not supported');
+  //     return;
+  //   }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
+  //   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  //   const recognition = new SpeechRecognition();
+  //   recognition.continuous = true;
+  //   recognition.interimResults = false;
+  //   recognition.lang = 'en-US';
+  //   recognition.maxAlternatives = 1;
 
-    recognitionRef.current = recognition;
+  //   recognitionRef.current = recognition;
 
-    const startRecognition = async () => {
-      if (!isSpeakingRef.current) {
-        try {
-          await recognition.start();
-          console.log("Recognition started");
-        } catch (error) {
+  //   const startRecognition = async () => {
+  //     if (!isSpeakingRef.current) {
+  //       try {
+  //         await recognition.start();
+  //         console.log("Recognition started");
+  //       } catch (error) {
 
-          setTimeout(startRecognition, 1000);
-        }
-      }
-    };
+  //         setTimeout(startRecognition, 1000);
+  //       }
+  //     }
+  //   };
 
-    recognition.onresult = async (event) => {
-      const last = event.results.length - 1;
-      const transcript = event.results[last][0].transcript.trim();
-      toast.success( transcript);
-      console.log(transcript);
-      // More flexible name matching
-      const assistantName = userData?.assistantName?.toLowerCase() || '';
-      if (transcript.toLowerCase().includes(assistantName) || 
-          (assistantName && transcript.toLowerCase().startsWith(assistantName.split(' ')[0]))) {
-        try {
-          const data = await getGeminiResponse(transcript);
-          console.log("AI Response:", data);
-          toast.success(data.response);
-          await handleCommand(data);
+  //   recognition.onresult = async (event) => {
+  //     const last = event.results.length - 1;
+  //     const transcript = event.results[last][0].transcript.trim();
+  //     toast.success( transcript);
+  //     console.log(transcript);
+  //     // More flexible name matching
+  //     const assistantName = userData?.assistantName?.toLowerCase() || '';
+  //     if (transcript.toLowerCase().includes(assistantName) || 
+  //         (assistantName && transcript.toLowerCase().startsWith(assistantName.split(' ')[0]))) {
+  //       try {
+  //         const data = await getGeminiResponse(transcript);
+  //         console.log("AI Response:", data);
+  //         toast.success(data.response);
+  //         await handleCommand(data);
           
-        } catch (error) {
-          console.error("AI error:", error);
-          await speak("Sorry, I couldn't process that request.");
-        }
-      }
-    };
+  //       } catch (error) {
+  //         console.error("AI error:", error);
+  //         await speak("Sorry, I couldn't process that request.");
+  //       }
+  //     }
+  //   };
 
-    recognition.onerror = (event) => {
-     consoel.log(even.error)
-      if (event.error !== 'no-speech') {
-        setTimeout(startRecognition, 1000);
-      }
-    };
+  //   recognition.onerror = (event) => {
+  //    consoel.log(even.error)
+  //     if (event.error !== 'no-speech') {
+  //       setTimeout(startRecognition, 1000);
+  //     }
+  //   };
 
-    recognition.onend = () => {
-      if (!isSpeakingRef.current) {
-        startRecognition();
-      }
-    };
+  //   recognition.onend = () => {
+  //     if (!isSpeakingRef.current) {
+  //       startRecognition();
+  //     }
+  //   };
 
    
-    const init = async () => {
+  //   const init = async () => {
+  //     try {
+  //       await navigator.mediaDevices.getUserMedia({ audio: true });
+  //       startRecognition();
+  //     } catch (err) {
+  //       console.error("Microphone access denied:", err);
+  //       speak("Please enable microphone access to use voice commands.");
+  //     }
+  //   };
+
+  //   init();
+
+  //   return () => {
+  //     recognition.stop();
+  //     recognition.onresult = null;
+  //     recognition.onerror = null;
+  //     recognition.onend = null;
+  //   };
+  // }, [userData?.assistantName, getGeminiResponse]);
+  useEffect(() => {
+  if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+    console.error('SpeechRecognition not supported');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const rec = new SR();
+  rec.continuous = true;
+  rec.interimResults = false;
+  rec.lang = 'en-US';
+  rec.maxAlternatives = 1;
+
+  let recognizing = false;
+  recognitionRef.current = rec;
+
+  rec.onstart = () => { recognizing = true; };
+  rec.onerror = (e) => {
+    console.error('SR error:', e.error);
+    recognizing = false;
+    if (e.error !== 'no-speech') {
+      setTimeout(startRecognition, 1000);
+    }
+  };
+  rec.onend = () => {
+    recognizing = false;
+    if (!isSpeakingRef.current) {
+      setTimeout(startRecognition, 500);
+    }
+  };
+
+  rec.onresult = async (event) => {
+    …
+  };
+
+  const startRecognition = async () => {
+    if (!recognizing && !isSpeakingRef.current) {
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        startRecognition();
+        await rec.start();
+        console.log('Recognition started');
       } catch (err) {
-        console.error("Microphone access denied:", err);
-        speak("Please enable microphone access to use voice commands.");
+        recognizing = false;
+        setTimeout(startRecognition, 1000);
       }
-    };
+    }
+  };
 
-    init();
+  const init = async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      startRecognition();
+    } catch (err) {
+      console.error('Microphone denied:', err);
+      speak("Please enable microphone access…");
+    }
+  };
 
-    return () => {
-      recognition.stop();
-      recognition.onresult = null;
-      recognition.onerror = null;
-      recognition.onend = null;
-    };
-  }, [userData?.assistantName, getGeminiResponse]);
+  init();
+
+  return () => {
+    rec.stop();
+    rec.onstart = rec.onerror = rec.onend = rec.onresult = null;
+  };
+}, [userData?.assistantName, getGeminiResponse]);
+
 
   const handleLogout = async () => {
     try {
