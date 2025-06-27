@@ -18,7 +18,7 @@ function Usercontext({ children }) {
         { withCredentials: true }
       );
       setUserData(result.data.user);
-      
+      console.log(result.data.user);
     } catch (error) {
       console.log(error);
     }
