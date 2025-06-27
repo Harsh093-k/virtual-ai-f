@@ -188,7 +188,7 @@ function Home() {
       if (!isSpeakingRef.current) {
         try {
           await recognition.start();
-          toast.success("Recognition started");
+          console.log("Recognition started");
         } catch (error) {
 
           setTimeout(startRecognition, 1000);
