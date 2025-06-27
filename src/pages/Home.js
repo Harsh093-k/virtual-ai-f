@@ -219,7 +219,7 @@ function Home() {
     };
 
     recognition.onerror = (event) => {
-     
+     consoel.log(even.error)
       if (event.error !== 'no-speech') {
         setTimeout(startRecognition, 1000);
       }
